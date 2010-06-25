@@ -5,7 +5,7 @@ pacific = pytz.timezone('US/Pacific')
 import tables
 import numpy as np
 import numpy
-import cam_params
+#import cam_params
 from scipy import linalg
 import matplotlib.pyplot as plt
 import sympy as sp
@@ -13,7 +13,6 @@ import time
 import scipy
 import scipy.optimize.optimize as optimize
 
-import multiaxis_script as ma
 
 
 def center(P):
