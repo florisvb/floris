@@ -6,7 +6,7 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.pyplot as plt
 import sys
 
-sys.path.append("/home/floris/src/flydra/flydra")
+sys.path.append("/usr/share/pyshared/flydra")
 import reconstruct
 
 
@@ -59,7 +59,14 @@ class Calibration:
         ax.plot( [self.camera_center[0], princ_pt[0]], [self.camera_center[1], princ_pt[1]], [self.camera_center[2], princ_pt[2]])
         
         # flydra cameras
-        
+        for cam_id in self.flydra_calibration.get_cam_ids():
+            camera_center = self.flydra_calibration.get_camera_center(cam_id)
+            camera_center = camera_center[:,0]
+            princ_pt = self.flydra_calibration.get_pmat(cam_id)[2,0:3]
+            ax.scatter3D( [camera_center[0]], [camera_center[1]], [camera_center[2]])
+            print '*'*80
+            print camera_center
+            ax.plot( [camera_center[0], princ_pt[0]], [camera_center[1], princ_pt[1]], [camera_center[2], princ_pt[2]])
         
         # axes 3d will not allow plotting a single point - so append the origin as hack  
         hack = np.zeros([2,3])
@@ -74,7 +81,7 @@ class Calibration:
         
 if __name__=='__main__':
     cal = Calibration()
-    cal.load_calibration_data('/home/floris/src/floris/ptf_calibration_20100706_104637')
-    cal.load_flydra_cameras('/home/floris/calibrations/20100703_2/20100703_cal_scaled_3cams.xml')
+    cal.load_calibration_data('/home/floris/data/calibrations/ptf_calibration_20100706_104637')
+    cal.load_flydra_cameras('/home/floris/data/calibrations/20100703_cal_scaled_3cams.xml')
     cal.calibrate()
     cal.plot()
