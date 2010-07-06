@@ -82,7 +82,7 @@ class FocusMotor:
             #print distc, focus
             plt.scatter(self.distc,self.focus)
             xi = np.linspace(min(self.distc),max(self.distc),50)
-            yi = [self.calc_focus(x) for x in xi]
+            yi = [self.calc_focus(distc=x) for x in xi]
             
             plt.title('Calibration data for Pan Tilt Focus')
             plt.xlabel('distance to camera center, m')
@@ -96,10 +96,14 @@ class FocusMotor:
         
         
     def calc_distc(self,pos_3d):
+        if len(pos_3d) == 4:
+            pos_3d = pos_3d[0:3] # in case we're being sent an adjusted pos
         distc = np.linalg.norm( pos_3d-self.camera_center ) # (might need to check orientation of vectors)
         return distc
         
-    def calc_focus(self, distc):
+    def calc_focus(self, pos_3d=None, distc=None):
+        if pos_3d is not None:
+            distc = self.calc_distc(pos_3d)
         #focus_pos = distc*self.coeffs[0] + self.coeffs[1]
         focus_pos = (self.coeffs[1]**(distc+self.coeffs[0])) + self.coeffs[2]
         #print focus_pos, distc, self.coeffs
@@ -130,49 +134,15 @@ class FocusMotor:
         
         # take difference btwn the distc and the recalculated distcs: this the the thing to minimize
         dist_diff = np.sum( np.abs( new_distc - self.distc ) )
-        
         center_diff = np.sum( np.abs( camera_center - self.original_camera_center ))
-        
-        #print 'camera center: ', camera_center, 'dist diff: ', dist_diff
-        print dist_diff
-        
-        return dist_diff+center_diff*.01
-
-    def focus_fmin_func(self,coeffs):
-        self.coeffs = coeffs
-        f = [self.calc_focus(d) for d in self.distc]
-        err = np.sum( np.abs( f-self.focus ))
-        return err  
-            
-            
-            
-        # find the distances to the camera center
-        self.distc = np.zeros(np.shape(self.data)[0])
-        for i in range(len(self.distc)):
-            self.distc[i] = self.calc_distc(self.data[i,3:6])
-            
-        # get a polyfit for focus pos vs distc
-        self.focus = self.data[:,2]
-        #self.coeffs = np.polyfit(distc, focus, 1)
-        tmp = scipy.optimize.fmin( self.focus_fmin_func, self.coeffs, full_output = 1, disp=0)
-        self.coeffs = tmp[0]
-
-        
-        # recalculate distc from the polyfit inverse
-        new_distc = self.calc_distc_from_focus(self.focus)
-        
-        # take difference btwn the distc and the recalculated distcs: this the the thing to minimize
-        dist_diff = np.sum( np.abs( new_distc - self.distc ) )
-        center_diff = np.sum( np.abs( camera_center - self.original_camera_center ))
-        err = dist_diff + center_diff*.001      
+        err = dist_diff + center_diff*.01      
         print 'calculating camera center, error: ', new_distc
         
         return err
 
     def focus_fmin_func(self,coeffs):
         self.coeffs = coeffs
-        f = [self.calc_focus(d) for d in self.distc]
+        f = [self.calc_focus(distc=d) for d in self.distc]
         err = np.sum( np.abs( f-self.focus ))
         return err  
-            
             

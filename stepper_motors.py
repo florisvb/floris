@@ -12,8 +12,8 @@ class StepperMotor:
     def __init__(self,sernum='0.0.A', gr=1, clkdir_mult=1, ind_per_rev=12800, vel_max=30000, vel_min=0):
     
         # initialize log file
-        LOG_FILENAME = 'motor_log_%d.out' % (motorID)
-        logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+        #LOG_FILENAME = 'motor_log_%d.out' % (motorID)
+        #logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
             
         print('Initializing Motor.... sernum: ', sernum, 'gear ratio: ', gr)
         self.sernum = sernum
@@ -122,6 +122,7 @@ class StepperMotor:
         elif np.abs(veldes) < self.vel_min:
             veldes = self.vel_min*np.sign(veldes)
     
+        change_direction=1
         if change_direction:
             self.dev.set_dir_setpt(direction,io_update=False)
         self.dev.set_vel_setpt(np.abs(veldes),io_update=True)
@@ -200,13 +201,13 @@ class StepperMotor:
         print('lo limit set: ', self.limitlo, '  high limit set: ', self.limithi)       
         print('usb zero: ', self.getpos())
         print(self.getint())
-        return [self.limitlo, self.limithi, self.centerpos]
+        return self.limitlo, self.limithi
         
     def infinity(self, duration=2, speed=-1):
         print 'infinity run'
-        self.set_vel(speed)
+        self.setvel(speed)
         time.sleep(duration)
-        self.set_vel(0)
+        self.setvel(0)
         self.dev.set_zero_pos(int(round(self.getpos('indices'))))       
         
     # DEBUGING
