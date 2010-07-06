@@ -70,12 +70,12 @@ def getMhat(data = None, data_file = None):
     Mhat = numpy.array(list(a_vec)+[1])
     Mhat.shape=(3,4)
     
-    print Mhat
+    #print Mhat
 
     cam_id = 'newcam'
-    print cam_id,center(Mhat).T,'residuals:',float(residuals)
+    #print cam_id,center(Mhat).T,'residuals:',float(residuals)
     
-    return Mhat
+    return Mhat, residuals[0]
     
     
 
