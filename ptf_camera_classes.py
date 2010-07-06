@@ -13,8 +13,8 @@ class PTMotor:
         self.vel = 0
         self.pos_offset = 0
         self.center_displacement = 0
-        if self.motor == 'tilt': self.ps3_gain = -0.02
-        if self.motor == 'pan': self.ps3_gain = -0.02 
+        if self.motor == 'tilt': self.ps3_gain = -0.01
+        if self.motor == 'pan': self.ps3_gain = -0.01
         self.home = 0
         
 class FocusMotor:
@@ -59,9 +59,10 @@ class FocusMotor:
         #self.data = pickle.load(fd)
         #self.original_camera_center = [ 0.26387096,  2.01547775, -6.21817195]
         
+        print 'calculating FOCUS camera center, this could take some time...'
         tmp = scipy.optimize.fmin( self.fmin_func, self.original_camera_center, full_output = 1, disp=0)
         self.camera_center = tmp[0]
-        print 'old camera center: ', self.original_camera_center
+        print 'seed camera center: ', self.original_camera_center
         print 'new camera center: ', self.camera_center
         
         
@@ -116,7 +117,7 @@ class FocusMotor:
         
     def fmin_func(self,camera_center):
         self.camera_center=camera_center
-        print camera_center
+        #print camera_center
         # find the distances to the camera center
         self.distc = np.zeros(np.shape(self.data)[0])
         for i in range(len(self.distc)):
@@ -135,8 +136,8 @@ class FocusMotor:
         # take difference btwn the distc and the recalculated distcs: this the the thing to minimize
         dist_diff = np.sum( np.abs( new_distc - self.distc ) )
         center_diff = np.sum( np.abs( camera_center - self.original_camera_center ))
-        err = dist_diff + center_diff*.01      
-        print 'calculating camera center, error: ', new_distc
+        err = dist_diff + center_diff*.00001      
+        #print 'calculating camera center, error: ', new_distc
         
         return err
 
