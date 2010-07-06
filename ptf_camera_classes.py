@@ -47,6 +47,7 @@ class FocusMotor:
                 self.data = pickle.load(fd)
                 
         if camera_center is None:
+            print 'no camera center given, calculating...'
             Mhat, residuals = camera_math.getMhat(self.data)
             camera_center = np.array(camera_math.center(Mhat).T[0])
             
@@ -101,6 +102,7 @@ class FocusMotor:
         
     def calc_distc_from_focus(self, focus_pos):
         #distc = (focus_pos - self.coeffs[1]) / self.coeffs[0]
+        
         distc = np.log(focus_pos - self.coeffs[2]) / np.log(self.coeffs[1]) - self.coeffs[0] 
         return distc
         
@@ -127,7 +129,7 @@ class FocusMotor:
         dist_diff = np.sum( np.abs( new_distc - self.distc ) )
         center_diff = np.sum( np.abs( camera_center - self.original_camera_center ))
         err = dist_diff + center_diff*.001      
-        print 'calculating camera center, error: ', err
+        print 'calculating camera center, error: ', new_distc
         
         return err
 
