@@ -30,8 +30,8 @@ class FocusMotor:
         # motor calibration values
         self.original_camera_center=[0,0,0]
         self.camera_center=[0,0,0]
-        self.coeffs = [0,1.1,0]
-        
+        self.coeffs = [-3.83926152e-07,   1.33637230e+00,  -2.97889319e+00]
+
     def calibrate(self, data=None, camera_center=None, filename=None):
     
         if data is not None:
@@ -50,26 +50,31 @@ class FocusMotor:
             print 'no camera center given, calculating...'
             Mhat, residuals = camera_math.getMhat(self.data)
             camera_center = np.array(camera_math.center(Mhat).T[0])
-            
-        print 'focus camera parameters: '
-        print 'seed camera_center: ', camera_center
+        else:
+            self.camera_center = camera_center
+            self.original_camera_center = camera_center
         
-        print 'calculating camera center and focus coefficients... (this may take a few minutes)'
-        # find the optimal camera center using focus info
+        #fd = open( filename, mode='r')
+        #print 'loading calibration... '
+        #self.data = pickle.load(fd)
+        #self.original_camera_center = [ 0.26387096,  2.01547775, -6.21817195]
+        
         tmp = scipy.optimize.fmin( self.fmin_func, self.original_camera_center, full_output = 1, disp=0)
         self.camera_center = tmp[0]
         print 'old camera center: ', self.original_camera_center
         print 'new camera center: ', self.camera_center
-        print 'total error: ', tmp[1]
         
-        # get the new focus coefficients using the optimal camera center (this is a repeat of what happens in the optimizer for the camera center)
+        
         self.distc = np.zeros(np.shape(self.data)[0])
         for i in range(len(self.distc)):
             self.distc[i] = self.calc_distc(self.data[i,3:6])
+        
         tmp = scipy.optimize.fmin( self.focus_fmin_func, self.coeffs, full_output = 1, disp=0)
         self.coeffs = tmp[0]
         
-        # plot the data and fit
+        print 'coefficients: ', self.coeffs
+        
+        
         fig = None
         if 1:
             if fig is None:    
@@ -102,13 +107,44 @@ class FocusMotor:
         
     def calc_distc_from_focus(self, focus_pos):
         #distc = (focus_pos - self.coeffs[1]) / self.coeffs[0]
-        
         distc = np.log(focus_pos - self.coeffs[2]) / np.log(self.coeffs[1]) - self.coeffs[0] 
         return distc
         
     def fmin_func(self,camera_center):
-        self.camera_center=camera_center        
-        #print camera_center
+        self.camera_center=camera_center
+        print camera_center
+        # find the distances to the camera center
+        self.distc = np.zeros(np.shape(self.data)[0])
+        for i in range(len(self.distc)):
+            self.distc[i] = self.calc_distc(self.data[i,3:6])
+            
+        # get a polyfit for focus pos vs distc
+        self.focus = self.data[:,2]
+        #self.coeffs = np.polyfit(distc, focus, 1)
+        tmp = scipy.optimize.fmin( self.focus_fmin_func, self.coeffs, full_output = 1, disp=0)
+        self.coeffs = tmp[0]
+
+        
+        # recalculate distc from the polyfit inverse
+        new_distc = self.calc_distc_from_focus(self.focus)
+        
+        # take difference btwn the distc and the recalculated distcs: this the the thing to minimize
+        dist_diff = np.sum( np.abs( new_distc - self.distc ) )
+        
+        center_diff = np.sum( np.abs( camera_center - self.original_camera_center ))
+        
+        #print 'camera center: ', camera_center, 'dist diff: ', dist_diff
+        print dist_diff
+        
+        return dist_diff+center_diff*.01
+
+    def focus_fmin_func(self,coeffs):
+        self.coeffs = coeffs
+        f = [self.calc_focus(d) for d in self.distc]
+        err = np.sum( np.abs( f-self.focus ))
+        return err  
+            
+            
             
         # find the distances to the camera center
         self.distc = np.zeros(np.shape(self.data)[0])
