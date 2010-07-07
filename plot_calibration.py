@@ -5,6 +5,7 @@ import numpy as np
 import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.pyplot as plt
 import sys
+import time
 
 sys.path.append("/usr/share/pyshared/flydra")
 import reconstruct
@@ -78,6 +79,20 @@ class Calibration:
         ax.set_ylabel('flydra y coordinates, meters')
         ax.set_zlabel('flydra z coordinates, meters')
         
+    def write_to_xml(self, pmat, filename=None):
+        if filename is None:
+            filename = time.strftime("ptf_calibration_xml_%Y%m%d_%H%M%S.xml",time.localtime())
+        print 'pmat: '
+        print pmat
+        K,R,t = camera_math.decomp(pmat)
+        print 'K: ', K
+        print 'R: ', R
+        Knew = np.eye(3)
+        Rnew = R
+        Rt = np.hstack((R,t))
+        Pnew = np.dot( Knew, Rt)
+        self.SingleCameraCalibration = reconstruct.SingleCameraCalibration_from_basic_pmat(Pnew, cam_id='ptf', res=[1000,1000])
+        self.SingleCameraCalibration.to_file(filename)
         
 if __name__=='__main__':
     cal = Calibration()
@@ -85,3 +100,9 @@ if __name__=='__main__':
     cal.load_flydra_cameras('/home/floris/data/calibrations/20100703_cal_scaled_3cams.xml')
     cal.calibrate()
     cal.plot()
+    
+    Pnew = camera_math.replace_camera_center(cal.Mhat, cal.focus.camera_center)
+    cal.write_to_xml(Pnew)
+    
+    
+    
