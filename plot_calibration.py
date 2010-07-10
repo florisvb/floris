@@ -5,8 +5,9 @@ import numpy as np
 import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.pyplot as plt
 import sys
+import time
 
-sys.path.append("/home/floris/src/flydra/flydra")
+sys.path.append("/usr/share/pyshared/flydra")
 import reconstruct
 
 
@@ -59,7 +60,14 @@ class Calibration:
         ax.plot( [self.camera_center[0], princ_pt[0]], [self.camera_center[1], princ_pt[1]], [self.camera_center[2], princ_pt[2]])
         
         # flydra cameras
-        
+        for cam_id in self.flydra_calibration.get_cam_ids():
+            camera_center = self.flydra_calibration.get_camera_center(cam_id)
+            camera_center = camera_center[:,0]
+            princ_pt = self.flydra_calibration.get_pmat(cam_id)[2,0:3]
+            ax.scatter3D( [camera_center[0]], [camera_center[1]], [camera_center[2]])
+            print '*'*80
+            print camera_center
+            ax.plot( [camera_center[0], princ_pt[0]], [camera_center[1], princ_pt[1]], [camera_center[2], princ_pt[2]])
         
         # axes 3d will not allow plotting a single point - so append the origin as hack  
         hack = np.zeros([2,3])
@@ -71,10 +79,60 @@ class Calibration:
         ax.set_ylabel('flydra y coordinates, meters')
         ax.set_zlabel('flydra z coordinates, meters')
         
+    def write_to_xml(self, pmat, filename=None):
+        if filename is None:
+            filename = time.strftime("ptf_calibration_xml_%Y%m%d_%H%M%S.txt",time.localtime())
+        print 'pmat: '
+        print pmat
+        K,R,t = camera_math.decomp(pmat)
+        print 'K: ', K
+        print 'R: ', R
+        Knew = np.eye(3)
+        Rnew = R
+        Rt = np.hstack((R,t))
+        Kscaled = K / K[2,2]
+        print 'kscaled: '
+        print Kscaled
+        Pnew = np.dot( Kscaled, Rt)
+        self.SingleCameraCalibration = reconstruct.SingleCameraCalibration_from_basic_pmat(Pnew, cam_id='ptf', res=[1000,1000])
+        #self.SingleCameraCalibration.to_file(filename)
+        #reconstruct.pretty_dump(self.SingleCameraCalibration)
+        # now load Reconstructor
+        self.Reconstructor = reconstruct.Reconstructor([self.SingleCameraCalibration])
+        return
+        
+    def to_motor_coords(self, obj_pos):
+        # takes 3D object as input, returns the three corresponding motor positions
+        # back out desired motor positions
+        [u,v] = self.Reconstructor.find2d('ptf',obj_pos)
+        pan_pos = np.arctan2(u,1) # focal length of 1, arbitrary
+        tilt_pos = np.arctan2(v,1)
+        focus_pos = self.focus.calc_focus(obj_pos)
+        motor_coords = [pan_pos, tilt_pos, focus_pos]
+        #print motor_coords
+        
+        return motor_coords
+        
+        
+    #def find_R(self):
+    
+        # for each 3D point, find the rotation from the 3D flydra vector, 
+        
         
 if __name__=='__main__':
     cal = Calibration()
-    cal.load_calibration_data('/home/floris/src/floris/ptf_calibration_20100706_104637')
-    cal.load_flydra_cameras('/home/floris/calibrations/20100703_2/20100703_cal_scaled_3cams.xml')
+    cal.load_calibration_data('/home/floris/data/calibrations/ptf_calibration_20100706_104637')
+    cal.load_flydra_cameras('/home/floris/data/calibrations/20100703_cal_scaled_3cams.xml')
     cal.calibrate()
     cal.plot()
+    
+    Pnew = camera_math.replace_camera_center(cal.Mhat, cal.focus.camera_center)
+    cal.write_to_xml(cal.Mhat)
+    
+    for i in range(np.shape(cal.data)[0]):
+        
+        obj_pos = cal.data[i,3:6]
+        reprojected_motor_pos = cal.to_motor_coords(obj_pos)
+        real_motor_pos = cal.data[i,0:3]
+        print np.abs( reprojected_motor_pos - real_motor_pos )
+    
