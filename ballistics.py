@@ -104,9 +104,10 @@ if __name__ == '__main__':
     mortar = Mortar(g=9.81, vt=15.24, v0=91.44, x0=0, y0=0)
     
     # calculate angles etc.
-    xf = 26
-    yf = 23
+    xf = 25
+    yf = 25
     theta, err, t, x, y, t_impact = mortar.calc_theta(xf, yf, theta0=45*np.pi/180, verbose=1, ftol=0.05)
+    plt.show()
     
     
 
