@@ -2,6 +2,8 @@
 # for better performance: should stay in imperial if end result is to be imperial: convert all imperial to inches
 
 def units(num, fromunit, tounit):
+    num = float(num)
+
     # initialize standard units
     num_in_inches = None
     num_in_meters = None
@@ -35,11 +37,15 @@ def units(num, fromunit, tounit):
     
     ## first convert to meters or inches ##
     # imperial
+    if fromunit in inches:
+        num_in_inches = num
     if fromunit in feet:
         num_in_inches = num*ft2in
     if fromunit in mils:
         num_in_inches = num*mil2in
     # metric
+    if fromunit in meters:
+        num_in_meters = num
     if fromunit in mmeters:
         num_in_meters = num*10**-3
     if fromunit in cmeters:
@@ -52,7 +58,7 @@ def units(num, fromunit, tounit):
         
     ## calculate all base values ##
     if num_in_meters is None and num_in_inches is None:
-        ValueError 'improper units specified'
+        ValueError ('improper units specified')
     if num_in_meters is None:
         num_in_meters = num_in_inches*in2m
     if num_in_inches is None:
