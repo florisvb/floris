@@ -1,5 +1,5 @@
 # unit converter
-# for better performance: should stay in imperial if end result is to be imperial: convert all imperial to inches
+import numpy as np
 
 def units(num, fromunit, tounit):
     num = float(num)
@@ -104,10 +104,17 @@ def cm2m(num):
     return conv
     
     
+# angular
+
+def deg2rad(num):
+    conv = num*np.pi/180.
+    return conv
+def rad2deg(num):
+    conv = num*180./np.pi
+    return conv    
     
     
-    
-    
+
     
     
     
