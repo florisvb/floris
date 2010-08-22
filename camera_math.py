@@ -75,6 +75,16 @@ def getMhat(data = None, data_file = None):
     
     return Mhat, residuals[0]
     
+def DLT(data3d, data2d):
+    # Mhat is, I think, the same as Pmat
+    B,c = build_Bc(data3d,data2d)
+    DLT_avec_results = numpy.linalg.lstsq(B,c)
+    a_vec,residuals = DLT_avec_results[:2]
+    a_vec = a_vec.T
+    Mhat = numpy.array(list(a_vec)+[1])
+    Mhat.shape=(3,4)
+    return Mhat, residuals[0]
+    
 def replace_camera_center(P, camera_center):
     
     K,R,t = decomp(P)
