@@ -29,6 +29,21 @@ def center(P):
 
     C_ = numpy.array( [[ X/T, Y/T, Z/T ]] ).T
     return C_
+    
+def build_rot_mat(rot_axis, rot_angle):
+
+    rot_axis = rot_axis / scipy.linalg.norm( rot_axis )
+    Rn = np.array([ [ rot_axis[0]**2+(1-rot_axis[0]**2)*np.cos(rot_angle),
+                        rot_axis[0]*rot_axis[1]*(1-np.cos(rot_angle))-rot_axis[2]*np.sin(rot_angle),
+                        rot_axis[0]*rot_axis[2]*(1-np.cos(rot_angle))+rot_axis[1]*np.sin(rot_angle)],
+                       [rot_axis[0]*rot_axis[1]*(1-np.cos(rot_angle))+rot_axis[2]*np.sin(rot_angle),
+                        rot_axis[1]**2+(1-rot_axis[1]**2)*np.cos(rot_angle),
+                        rot_axis[1]*rot_axis[2]*(1-np.cos(rot_angle))-rot_axis[0]*np.sin(rot_angle)],
+                       [rot_axis[0]*rot_axis[2]*(1-np.cos(rot_angle))-rot_axis[1]*np.sin(rot_angle),
+                        rot_axis[1]*rot_axis[2]*(1-np.cos(rot_angle))+rot_axis[0]*np.sin(rot_angle),
+                        rot_axis[2]**2+(1-rot_axis[2]**2)*np.cos(rot_angle)] ])
+                        
+    return Rn
 
 def build_Bc(X3d,x2d):
     B = []

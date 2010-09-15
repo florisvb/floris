@@ -13,6 +13,7 @@ class PTMotor:
         self.vel = 0
         self.pos_offset = 0
         self.center_displacement = 0
+        self.angular_displacement = 0
         if self.motor == 'tilt': self.ps3_gain = -0.01
         if self.motor == 'pan': self.ps3_gain = -0.01
         self.home = 0
