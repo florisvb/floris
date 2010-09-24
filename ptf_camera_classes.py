@@ -88,6 +88,7 @@ class FocusMotor:
             plt.xlabel('distance to camera center, m')
             plt.ylabel('focus motor setting, radians')
             plt.plot(xi,yi)
+            plt.show()
             print 'plotted focus'
             
     def fmin_camera_center_func(self, coeffs):
