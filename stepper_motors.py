@@ -210,7 +210,7 @@ class StepperMotor:
         self.setvel(0)
         self.dev.set_zero_pos(int(round(self.getpos('indices'))))       
         
-    def zerostart(self, offset):
+    def zerostart(self):
         print 'zero start'
         self.setvel(0)
         self.dev.set_zero_pos(int(round(self.getpos('indices'))))
