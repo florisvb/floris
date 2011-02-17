@@ -90,7 +90,7 @@ def getMhat(data = None, data_file = None):
     
     return Mhat, residuals[0]
     
-def DLT(data3d, data2d):
+def DLT(data3d, data2d, normalize=True):
     # Mhat is, I think, the same as Pmat
     B,c = build_Bc(data3d,data2d)
     DLT_avec_results = numpy.linalg.lstsq(B,c)
@@ -98,6 +98,23 @@ def DLT(data3d, data2d):
     a_vec = a_vec.T
     Mhat = numpy.array(list(a_vec)+[1])
     Mhat.shape=(3,4)
+    
+    if normalize:
+        K,R,t = decomp(Mhat)
+        K /= K[2,2]
+        camera_center = np.zeros([3,4])
+        camera_center[:,0:3] = np.eye(3)
+        camera_center[:,3] = -1*center(Mhat).T
+        print K
+        print R
+        print t
+        Mhat = np.dot( np.dot(K,R), camera_center )
+        K,R,t = decomp(Mhat)
+        print
+        print
+        print K
+        print R
+        print t
     return Mhat, residuals[0]
     
 def replace_camera_center(P, camera_center):
@@ -105,7 +122,7 @@ def replace_camera_center(P, camera_center):
     K,R,t = decomp(P)
     tmp = np.zeros([3,4])
     tmp[:,0:3] = np.eye(3)
-    tmp[:,3] = camera_center
+    tmp[:,3] = -1*camera_center
     print K, R, tmp
     Pnew = np.dot( np.dot(K,R), tmp )
     return Pnew   
