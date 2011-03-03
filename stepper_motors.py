@@ -210,6 +210,11 @@ class StepperMotor:
         self.setvel(0)
         self.dev.set_zero_pos(int(round(self.getpos('indices'))))       
         
+    def zerostart(self):
+        print 'zero start'
+        self.setvel(0)
+        self.dev.set_zero_pos(int(round(self.getpos('indices'))))
+        
     # DEBUGING
     def sintest(self, AMP=0.5, FREQ=1, TIME=5, mode='velocity'):
     
